@@ -104,6 +104,7 @@ int   calculatePWM(float tempC);
 void  updateFan(SensorData &s, FanState &f);
 void  updateDisplay(const SensorData &s, const FanState &f);
 void  printPadded(int val, int width);
+void  printBar(uint8_t filled, uint8_t total);
 
 // =============================================================
 //  SETUP
@@ -275,42 +276,59 @@ void updateFan(SensorData &s, FanState &f) {
 }
 
 // =============================================================
-//  LCD DISPLAY  –  16×2 layout
-//
-//  Row 0:  "T:25.3C  H: 60%"
-//  Row 1:  "F: 65% D:120cm "
-//          "PERSON DETECTED!"
-//          "SENSOR ERROR!   "
+//  LCD DISPLAY  –  creative dashboard (3 rotating pages)
+//  Page 0: Climate overview (temperature + humidity)
+//  Page 1: Fan + distance status
+//  Page 2: Fan power bargraph with safety message
 // =============================================================
 void updateDisplay(const SensorData &s, const FanState &f) {
+  static uint8_t page = 0;
 
-  // ── Row 0: temperature + humidity ───────────────────────────
-  lcd.setCursor(0, 0);
-  if (s.dhtError) {
-    lcd.print(F("T: ERR   H: ERR "));
-  } else {
-    lcd.print(F("T:"));
-    lcd.print(s.tempC, 1);
-    lcd.print(F("C H:"));
-    printPadded((int)s.humidity, 3);
-    lcd.print(F("% "));
-  }
+  lcd.clear();
 
-  // ── Row 1: fan speed + distance / status ────────────────────
-  lcd.setCursor(0, 1);
   if (s.dhtError || s.distanceCm == -1) {
-    lcd.print(F("SENSOR ERROR!   "));
+    lcd.setCursor(0, 0);
+    lcd.print(F("!! SENSOR ALERT !!"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("Fan forced to 100"));
   } else if (s.personNearby) {
-    lcd.print(F("PERSON DETECTED!"));
+    lcd.setCursor(0, 0);
+    lcd.print(F("  PERSON NEARBY "));
+    lcd.setCursor(0, 1);
+    lcd.print(F("Fan paused safe"));
   } else {
-    lcd.print(F("F:"));
-    printPadded(f.percentSpeed, 3);
-    lcd.print(F("% D:"));
-    printPadded(s.distanceCm, 4);
-    lcd.print(F("cm"));
+    if (page == 0) {
+      lcd.setCursor(0, 0);
+      lcd.print(F("Climate  T:"));
+      lcd.print(s.tempC, 1);
+      lcd.print(F("C"));
+      lcd.setCursor(0, 1);
+      lcd.print(F("Humidity: "));
+      printPadded((int)s.humidity, 2);
+      lcd.print(F("%"));
+    } else if (page == 1) {
+      lcd.setCursor(0, 0);
+      lcd.print(F("Fan "));
+      printPadded(f.percentSpeed, 3);
+      lcd.print(F("%  PWM"));
+      lcd.setCursor(0, 1);
+      lcd.print(F("Distance: "));
+      printPadded(s.distanceCm, 3);
+      lcd.print(F("cm"));
+    } else {
+      lcd.setCursor(0, 0);
+      lcd.print(F("Fan Power"));
+      lcd.setCursor(0, 1);
+      uint8_t bars = (uint8_t)map(f.percentSpeed, 0, 100, 0, 10);
+      printBar(bars, 10);
+      lcd.print(' ');
+      printPadded(f.percentSpeed, 3);
+      lcd.print('%');
+    }
+
+    page = (page + 1) % 3;
   }
 
-  // ── Serial debug ────────────────────────────────────────────
   Serial.print(F("Temp: "));      Serial.print(s.tempC, 1);
   Serial.print(F("C  Hum: "));    Serial.print(s.humidity, 0);
   Serial.print(F("%  Fan: "));    Serial.print(f.percentSpeed);
@@ -322,4 +340,10 @@ void printPadded(int val, int width) {
   String s = String(val);
   for (int i = s.length(); i < width; i++) lcd.print(' ');
   lcd.print(s);
+}
+
+void printBar(uint8_t filled, uint8_t total) {
+  for (uint8_t i = 0; i < total; i++) {
+    lcd.print(i < filled ? char(255) : '-');
+  }
 }
