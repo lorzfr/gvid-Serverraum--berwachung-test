@@ -67,12 +67,13 @@ Ziel ist eine robuste, leicht nachvollziehbare Steuerung, die:
 .
 ├── README.md
 ├── LICENSE
-├── Dokumentation-als-PDF.txt
 ├── doc/
-│   └── dokumenation.md
+│   ├── dokumenation.md
+│   └── Dokumentation-als-PDF.txt
 ├── serverroom_fan_control-TMP36.ino
 ├── serverroom_fan_control_dht11.ino
 ├── serverraumüberwachung.fzz
+├── serverraumüberwachung_bb.png
 ├── IMG_2060.jpeg
 ├── IMG_2066.jpeg
 └── IMG_2067.jpeg
@@ -81,14 +82,17 @@ Ziel ist eine robuste, leicht nachvollziehbare Steuerung, die:
 ## Dokumentation & Medien
 
 - Ausführliche Projektdokumentation: `doc/dokumenation.md`
-- Hinweis zur PDF-Abgabe: `Dokumentation-als-PDF.txt`
+- Hinweis zur PDF-Abgabe: `doc/Dokumentation-als-PDF.txt`
 - Fritzing-Datei: `serverraumüberwachung.fzz`
+- Fritzing-Export des Breadboard-Aufbaus: `serverraumüberwachung_bb.png`
 - Aufbaufotos:
   - `IMG_2060.jpeg`
   - `IMG_2066.jpeg`
   - `IMG_2067.jpeg`
 
 ## Bilder
+
+![Fritzing-Export des Breadboard-Aufbaus](./serverraumüberwachung_bb.png)
 
 ![Aufbau 1](./IMG_2060.jpeg)
 ![Aufbau 2](./IMG_2066.jpeg)
