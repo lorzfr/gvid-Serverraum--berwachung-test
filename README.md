@@ -1,64 +1,52 @@
 # Serverraumüberwachung mit automatischer Lüftersteuerung
 
-Dieses Repository enthält ein Arduino-Projekt zur Überwachung eines Serverraums mit temperaturabhängiger Lüftersteuerung, Abstandserkennung, DHT11-/TMP36-Sensorik und LCD-Anzeige.
+Arduino-Projekt zur Überwachung eines Serverraums: Temperaturmessung, automatische PWM-Lüftersteuerung, Abstandserkennung als Lüfter-Stopp und Statusanzeige auf einem 16x2-I2C-LCD.
 
-## Projektziel
+Es gibt zwei Sketch-Varianten:
 
-Ziel ist eine robuste, leicht nachvollziehbare Steuerung, die:
-- Temperatur kontinuierlich überwacht,
-- optional Luftfeuchtigkeit über den DHT11 erfasst,
-- den Lüfter per PWM regelt,
-- bei Personenerkennung in Lüfternähe den Lüfter stoppt,
-- bei Sensorfehlern automatisch in einen Failsafe-Modus geht.
+| Sketch | Sensoren | Zusatznutzen |
+|---|---|---|
+| `serverroom_fan_control-TMP36.ino` | TMP36 + HC-SR04 | schnelle analoge Temperaturmessung |
+| `serverroom_fan_control_dht11.ino` | DHT11 + HC-SR04 | Temperatur plus Luftfeuchtigkeit |
 
-## Aktueller Projektstand
+## Funktionen
 
-### Arduino-Sketches
+- Temperaturabhängige Lüfterfreigabe mit Hysterese:
+  - Einschalten ab `30.0 °C`
+  - Ausschalten unter `28.0 °C`
+- PWM-Regelung zwischen `FAN_PWM_MIN = 100` und `FAN_PWM_MAX = 255`
+- Glättung der Temperaturwerte per gleitendem Mittelwert
+  - TMP36: 10 Messwerte
+  - DHT11: 5 Messwerte
+- Personenerkennung über HC-SR04:
+  - unter `50 cm` wird der Lüfter abgeschaltet
+- Failsafe bei Sensorfehlern:
+  - TMP36-Version: HC-SR04-Fehler setzt den Lüfter auf 100 %
+  - DHT11-Version: DHT11- oder HC-SR04-Fehler setzt den Lüfter auf 100 %
+- Serielle Debug-Ausgabe mit `9600 Baud`
 
-1. `serverroom_fan_control-TMP36.ino`
-   - Sensorik: **TMP36** (Temperatur, analog) + **HC-SR04** (Abstand)
-   - Anzeige: **I2C LCD 16x2**
-   - Logik: Temperatur-Hysterese, PWM-Mapping, Sonar-Failsafe
-
-2. `serverroom_fan_control_dht11.ino`
-   - Sensorik: **DHT11** (Temperatur + Luftfeuchte) + **HC-SR04** (Abstand)
-   - Anzeige: **I2C LCD 16x2**
-   - Logik: Temperatur-Hysterese, PWM-Mapping, DHT/Sonar-Failsafe
-
-> Hinweis: In älteren Dokumentationen werden teilweise andere Dateinamen genannt. Maßgeblich sind die oben genannten tatsächlich vorhandenen Sketch-Dateien.
-
-### Fritzing- und Bilddateien
-
-- `serverraumüberwachung.fzz` ist die aktuelle Fritzing-Projektdatei.
-- `serverraumüberwachung_bb.png` ist der aktuelle exportierte Fritzing-Aufbau mit Arduino Mega 2560, DHT11, HC-SR04, I2C-LCD und Lüfter.
-- Die alte Backup-Datei `serverraumüberwachung.fzz.old` wurde entfernt, damit nur die aktuelle Fritzing-Version im Repository liegt.
-- `IMG_2060.jpeg`, `IMG_2066.jpeg` und `IMG_2067.jpeg` dokumentieren den realen Aufbau.
-
-## Verwendete Hardware
+## Hardware
 
 - Arduino Mega 2560
-- 5V PWM-Lüfter
+- 5-V-Lüfter mit PWM-/Steuereingang oder geeigneter Treiberstufe
 - TMP36 **oder** DHT11
 - HC-SR04 Ultraschallsensor
-- I2C LCD (16x2, häufig Adresse `0x27`, alternativ `0x3F`)
-- Jumper-Kabel / Breadboard
+- 16x2-I2C-LCD, Standardadresse im Code: `0x27`
+- Jumper-Kabel, ggf. Breadboard
+
+> Wichtig: Einen Lüfter nicht direkt über einen Arduino-I/O-Pin mit Strom versorgen. Der Pin `D9` ist in den Sketches als PWM-/Steuersignal vorgesehen. Die Lüfterversorgung muss zur Stromaufnahme des Lüfters passen; bei einem einfachen DC-Lüfter wird eine Treiberstufe, z. B. Transistor oder MOSFET mit Freilaufdiode, benötigt.
 
 ## Pinbelegung
 
-### DHT11-Version
+### Gemeinsame Anschlüsse
 
 | Komponente | Anschluss | Arduino Mega 2560 |
 |---|---:|---:|
-| DHT11 | DAT | D2 |
-| DHT11 | VCC | 5V |
-| DHT11 | GND | GND |
 | HC-SR04 | TRIG | D3 |
 | HC-SR04 | ECHO | D4 |
 | HC-SR04 | VCC | 5V |
 | HC-SR04 | GND | GND |
-| Lüfter | PWM/Signal | D9 |
-| Lüfter | VCC | 5V |
-| Lüfter | GND | GND |
+| Lüfter | PWM/Steuersignal | D9 |
 | I2C-LCD | SDA | D20/SDA |
 | I2C-LCD | SCL | D21/SCL |
 | I2C-LCD | VCC | 5V |
@@ -71,44 +59,47 @@ Ziel ist eine robuste, leicht nachvollziehbare Steuerung, die:
 | TMP36 | Signal | A0 |
 | TMP36 | VCC | 5V |
 | TMP36 | GND | GND |
-| HC-SR04 | TRIG | D3 |
-| HC-SR04 | ECHO | D4 |
-| Lüfter | PWM/Signal | D9 |
-| I2C-LCD | SDA | D20/SDA |
-| I2C-LCD | SCL | D21/SCL |
 
-## Benötigte Libraries
+### DHT11-Version
+
+| Komponente | Anschluss | Arduino Mega 2560 |
+|---|---:|---:|
+| DHT11 | DAT | D2 |
+| DHT11 | VCC | 5V |
+| DHT11 | GND | GND |
+
+> Hinweis: Bei einem nackten DHT11-Sensor wird normalerweise ein Pull-up-Widerstand zwischen DAT und VCC benötigt. Viele DHT11-Module haben diesen Widerstand bereits auf der Platine.
+
+## Benötigte Arduino-Libraries
 
 Über den Arduino Library Manager installieren:
-- `LiquidCrystal_I2C` (Frank de Brabander)
-- `DHT sensor library` (Adafruit) *(nur für DHT11-Sketch)*
-- `Adafruit Unified Sensor` *(Abhängigkeit der DHT-Library)*
 
-## Kernlogik
-
-- Nicht-blockierende Zeitsteuerung mit `millis()`
-- Temperaturglättung per Moving Average
-- Hysterese mit `TEMP_FAN_ON` und `TEMP_FAN_OFF`
-- Personenerkennung über Distanzschwelle (`PERSON_DIST_CM`)
-- Failsafe:
-  - TMP36-Sketch: bei Sonarfehler Lüfter auf 100 %
-  - DHT11-Sketch: bei DHT- **oder** Sonarfehler Lüfter auf 100 %
+- Für beide Sketches: `LiquidCrystal_I2C` von Frank de Brabander
+- Zusätzlich für `serverroom_fan_control_dht11.ino`:
+  - `DHT sensor library` von Adafruit
+  - `Adafruit Unified Sensor` von Adafruit
 
 ## Schnellstart
 
-1. Hardware gemäß Fritzing-Aufbau und Pinbelegung anschließen.
-2. Passenden Sketch öffnen:
-   - `serverroom_fan_control-TMP36.ino` **oder**
-   - `serverroom_fan_control_dht11.ino`
-3. Bibliotheken installieren.
-4. Sketch auf den Arduino Mega 2560 hochladen.
-5. LCD prüfen (bei leerem Display I2C-Adresse `0x27`/`0x3F` testen).
-6. Funktion testen:
-   - Sensor erwärmen: Lüfter startet ab ca. `30°C`.
-   - Hand vor HC-SR04 halten: Lüfter stoppt bei weniger als `50 cm` Abstand.
-   - Sensorleitung testweise trennen: Failsafe schaltet den Lüfter auf 100 %.
+1. Hardware nach Pinbelegung anschließen.
+2. Gewünschte Sketch-Variante in der Arduino IDE öffnen:
+   - `serverroom_fan_control-TMP36.ino`
+   - oder `serverroom_fan_control_dht11.ino`
+3. Benötigte Libraries installieren.
+4. Board `Arduino Mega or Mega 2560` und den richtigen Port auswählen.
+5. Sketch hochladen.
+6. Seriellen Monitor auf `9600 Baud` öffnen oder Werte auf dem LCD prüfen.
+7. Wenn das LCD leer bleibt, im Sketch `LCD_I2C_ADDR` von `0x27` auf `0x3F` ändern und erneut hochladen.
 
-## Projektstruktur
+## Funktionstest
+
+- Sensor erwärmen: Lüfterfreigabe startet ab etwa `30 °C`.
+- Sensor abkühlen lassen: Lüfterfreigabe endet erst unter `28 °C`.
+- Hand vor den HC-SR04 halten: Bei weniger als `50 cm` wird `PERSON DETECTED!` angezeigt und der Lüfter stoppt.
+- HC-SR04-Echo-Verbindung trennen oder Timeout simulieren: Failsafe setzt den Lüfter auf 100 %.
+- Nur DHT11-Version: DHT11 trennen oder Fehlmessung auslösen; das Display zeigt `ERR`/`SENSOR ERROR!`, der Lüfter läuft mit 100 %.
+
+## Dateien im Repository
 
 ```text
 .
@@ -121,27 +112,30 @@ Ziel ist eine robuste, leicht nachvollziehbare Steuerung, die:
 ├── serverroom_fan_control_dht11.ino
 ├── serverraumüberwachung.fzz
 ├── serverraumüberwachung_bb.png
+├── serverraumüberwachung_PAP.png
 ├── IMG_2060.jpeg
 ├── IMG_2066.jpeg
 └── IMG_2067.jpeg
 ```
 
-## Dokumentation & Medien
+## Dokumentation und Medien
 
-- Ausführliche Projektdokumentation: `doc/dokumenation.md`
+- Ausführlichere Projektdokumentation: `doc/dokumenation.md`
 - Hinweis zur PDF-Abgabe: `doc/Dokumentation-als-PDF.txt`
-- Fritzing-Datei: `serverraumüberwachung.fzz`
-- Fritzing-Export des Breadboard-/Schaltaufbaus: `serverraumüberwachung_bb.png`
-- Aufbaufotos:
-  - `IMG_2060.jpeg`
-  - `IMG_2066.jpeg`
-  - `IMG_2067.jpeg`
+- Fritzing-Projekt: `serverraumüberwachung.fzz`
+- Exportierter Breadboard-Aufbau: `serverraumüberwachung_bb.png`
+- Programmablaufplan: `serverraumüberwachung_PAP.png`
+- Fotos des Aufbaus: `IMG_2060.jpeg`, `IMG_2066.jpeg`, `IMG_2067.jpeg`
 
 ## Bilder
 
 ### Fritzing-Aufbau
 
 ![Fritzing-Export des Breadboard-Aufbaus](./serverraumüberwachung_bb.png)
+
+### Programmablaufplan
+
+![Programmablaufplan](./serverraumüberwachung_PAP.png)
 
 ### Realer Aufbau
 
