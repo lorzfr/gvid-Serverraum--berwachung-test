@@ -112,6 +112,7 @@ Es gibt zwei Sketch-Varianten:
 ├── serverroom_fan_control_dht11.ino
 ├── serverraumüberwachung.fzz
 ├── serverraumüberwachung_bb.png
+├── serverraumüberwachung_schematic.png
 ├── serverraumüberwachung_PAP.png
 ├── IMG_2060.jpeg
 ├── IMG_2066.jpeg
@@ -124,6 +125,7 @@ Es gibt zwei Sketch-Varianten:
 - Hinweis zur PDF-Abgabe: `doc/Dokumentation-als-PDF.txt`
 - Fritzing-Projekt: `serverraumüberwachung.fzz`
 - Exportierter Breadboard-Aufbau: `serverraumüberwachung_bb.png`
+- Schematischer Aufbau mit Leiterbahnen: `serverraumüberwachung_schematic.png`
 - Programmablaufplan: `serverraumüberwachung_PAP.png`
 - Fotos des Aufbaus: `IMG_2060.jpeg`, `IMG_2066.jpeg`, `IMG_2067.jpeg`
 
@@ -132,6 +134,10 @@ Es gibt zwei Sketch-Varianten:
 ### Fritzing-Aufbau
 
 ![Fritzing-Export des Breadboard-Aufbaus](./serverraumüberwachung_bb.png)
+
+### Schematischer Aufbau
+
+![Schematischer Tischaufbau mit Leiterbahnen](./serverraumüberwachung_schematic.png)
 
 ### Programmablaufplan
 
